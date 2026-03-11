@@ -9,11 +9,11 @@ import "../src/modules/AresAuthorization.sol";
 import "../src/modules/AresRewards.sol";
 
 contract Deploy is Script {
-    // ── Configuration ────────────────────────────────────────────────────────
+  
     // Set these before deploying.
-    address constant GOVERNANCE_TOKEN   = address(0);   // e.g. your ERC20Votes token
-    address constant REWARD_TOKEN       = address(0);   // token distributed to contributors
-    address constant AUTHORIZER         = address(0);   // multisig or guardian key
+    address constant GOVERNANCE_TOKEN   = address(0);  
+    address constant REWARD_TOKEN       = address(0);   
+    address constant AUTHORIZER         = address(0);   
 
     uint256 constant TIMELOCK_DELAY     = 2 days;
     uint256 constant PROPOSAL_THRESHOLD = 100_000 ether;
@@ -28,18 +28,17 @@ contract Deploy is Script {
 
         vm.startBroadcast();
 
-        // 1. Pre-compute the Authorization address so the Timelock can reference it
-        //    as an immutable at construction time.
+      
         uint64 nonce = vm.getNonce(msg.sender);
         address futureAuthAddr = vm.computeCreateAddress(msg.sender, nonce + 3);
 
-        // 2. Timelock — only the authorization module can queue proposals
+        // Timelock — only the authorization module can queue proposals
         AresTimelockExecution timelock = new AresTimelockExecution(
             TIMELOCK_DELAY,
             futureAuthAddr
         );
 
-        // 3. Proposal Manager — gates who can propose
+        // Proposal Manager — gates who can propose
         AresProposalManager proposalManager = new AresProposalManager(
             GOVERNANCE_TOKEN,
             PROPOSAL_THRESHOLD
@@ -52,7 +51,7 @@ contract Deploy is Script {
             EPOCH_DURATION
         );
 
-        // 5. Authorization — bridges proposals into the timelock queue
+        // Authorization — bridges proposals into the timelock queue
         AresAuthorization authorization = new AresAuthorization(
             address(timelock),
             address(proposalManager),
@@ -61,7 +60,7 @@ contract Deploy is Script {
 
         require(address(authorization) == futureAuthAddr, "Address mismatch");
 
-        // 6. Rewards — Merkle-based contributor distribution
+        // Rewards — Merkle-based contributor distribution
         AresRewards rewards = new AresRewards(
             REWARD_TOKEN,
             address(treasury)
